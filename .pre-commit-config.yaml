@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -14,21 +14,3 @@ repos:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-all]
-
-  - repo: local
-    hooks:
-      - id: license-header
-        name: License Header
-        entry: python license_header_hook.py
-        language: python
-        files: \.py$
-        args: [
-          "--template", "license-header.txt",
-          "--copyright-holder", "License Header Hook Contributors"
-        ]

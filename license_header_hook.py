@@ -10,7 +10,6 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 class CommentRegistry:
@@ -48,14 +47,19 @@ class CommentRegistry:
         # YAML
         ".yml": {"start": "#", "middle": "#", "end": "#"},
         ".yaml": {"start": "#", "middle": "#", "end": "#"},
+        # RTL
+        ".vhdl": {"start": "/*", "middle": "", "end": "*/"},
+        ".vhd": {"start": "/*", "middle": "", "end": "*/"},
+        ".v": {"start": "/*", "middle": "", "end": "*/"},
+        ".sv": {"start": "/*", "middle": "", "end": "*/"},
     }
 
-    def __init__(self, custom_mappings: Optional[Dict] = None):
+    def __init__(self, custom_mappings: dict | None = None):
         self.mappings = self.DEFAULT_MAPPINGS.copy()
         if custom_mappings:
             self.mappings.update(custom_mappings)
 
-    def get_comment_style(self, file_path: str) -> Optional[Dict[str, str]]:
+    def get_comment_style(self, file_path: str) -> dict[str, str] | None:
         """Get comment style for a file based on its extension."""
         ext = Path(file_path).suffix.lower()
         return self.mappings.get(ext)
@@ -91,7 +95,7 @@ class LicenseHeaderManager:
             year=self.current_year, copyright_holder=self.copyright_holder
         )
 
-    def create_header_comment(self, content: str, comment_style: Dict[str, str]) -> str:
+    def create_header_comment(self, content: str, comment_style: dict[str, str]) -> str:
         """Create a commented header from content."""
         lines = content.split("\n")
 
@@ -109,8 +113,8 @@ class LicenseHeaderManager:
             return "\n".join(result)
 
     def extract_existing_header(
-        self, file_content: str, comment_style: Dict[str, str]
-    ) -> Optional[str]:
+        self, file_content: str, comment_style: dict[str, str]
+    ) -> str | None:
         """Extract existing license header from file content."""
         lines = file_content.split("\n")
 
@@ -162,44 +166,48 @@ class LicenseHeaderManager:
 
             return "\n".join(header_lines) if header_lines else None
 
-    def _extract_header_content(self, header: str, comment_style: Dict[str, str]) -> str:
+    def _extract_header_content(
+        self, header: str, comment_style: dict[str, str]
+    ) -> str:
         """Extract the actual content from a commented header."""
-        lines = header.split('\n')
+        lines = header.split("\n")
         content_lines = []
-        
-        if comment_style['start'] == comment_style['middle']:
+
+        if comment_style["start"] == comment_style["middle"]:
             # Single-line comments - remove comment prefix
             for line in lines:
                 stripped = line.strip()
-                if stripped.startswith(comment_style['start']):
-                    content = stripped[len(comment_style['start']):].strip()
+                if stripped.startswith(comment_style["start"]):
+                    content = stripped[len(comment_style["start"]) :].strip()
                     content_lines.append(content)
         else:
             # Multi-line comments - remove comment markers
             for i, line in enumerate(lines):
                 stripped = line.strip()
-                if i == 0 and stripped.startswith(comment_style['start']):
+                if i == 0 and stripped.startswith(comment_style["start"]):
                     # First line with start marker
-                    content = stripped[len(comment_style['start']):].strip()
+                    content = stripped[len(comment_style["start"]) :].strip()
                     if content:
                         content_lines.append(content)
-                elif stripped.endswith(comment_style['end']):
+                elif stripped.endswith(comment_style["end"]):
                     # Last line with end marker
-                    content = stripped[:-len(comment_style['end'])].strip()
-                    if content.startswith(comment_style['middle'].strip()):
-                        content = content[len(comment_style['middle'].strip()):].strip()
+                    content = stripped[: -len(comment_style["end"])].strip()
+                    if content.startswith(comment_style["middle"].strip()):
+                        content = content[
+                            len(comment_style["middle"].strip()) :
+                        ].strip()
                     if content:
                         content_lines.append(content)
                     break
-                elif stripped.startswith(comment_style['middle'].strip()):
+                elif stripped.startswith(comment_style["middle"].strip()):
                     # Middle line
-                    content = stripped[len(comment_style['middle'].strip()):].strip()
+                    content = stripped[len(comment_style["middle"].strip()) :].strip()
                     content_lines.append(content)
-        
-        return '\n'.join(content_lines)
+
+        return "\n".join(content_lines)
 
     def remove_existing_header(
-        self, file_content: str, comment_style: Dict[str, str]
+        self, file_content: str, comment_style: dict[str, str]
     ) -> str:
         """Remove existing license header from file content."""
         lines = file_content.split("\n")
@@ -266,14 +274,7 @@ class LicenseHeaderManager:
         formatted_template = self.format_template(template)
         new_header = self.create_header_comment(formatted_template, comment_style)
 
-        # Check if existing header is already correct
-        existing_header = self.extract_existing_header(original_content, comment_style)
-        if existing_header:
-            # Compare the content of existing header with new header
-            existing_content = self._extract_header_content(existing_header, comment_style)
-            if existing_content.strip() == formatted_template.strip():
-                # Header is already correct, no need to update
-                return False
+        # TODO: Add optimization to check if existing header is already correct
 
         # Remove existing header if present
         content_without_header = self.remove_existing_header(
@@ -283,7 +284,7 @@ class LicenseHeaderManager:
         # Create new content with header
         # Check if original content starts with shebang
         lines = original_content.split("\n")
-        if lines and lines[0].startswith("\#!"):
+        if lines and lines[0].startswith("#!"):
             # Preserve shebang at the top
             shebang = lines[0]
             remaining_content = content_without_header
@@ -310,7 +311,7 @@ class LicenseHeaderManager:
 
 
 def should_process_file(
-    file_path: str, include_patterns: List[str], exclude_patterns: List[str]
+    file_path: str, include_patterns: list[str], exclude_patterns: list[str]
 ) -> bool:
     """Check if file should be processed based on include/exclude patterns."""
     path = Path(file_path)
