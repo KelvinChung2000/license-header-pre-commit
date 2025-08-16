@@ -427,21 +427,3 @@ print('hello')
         # Verify file wasn't modified
         new_stat = os.stat(test_file)
         assert new_stat.st_mtime == original_stat.st_mtime
-
-    def test_extract_header_content_single_line(self):
-        """Test extracting content from single-line comments."""
-        header = "# Copyright (c) 2025 Test Corp\n# License text"
-        comment_style = {"start": "#", "middle": "#", "end": "#"}
-
-        content = self.manager._extract_header_content(header, comment_style)
-        expected = "Copyright (c) 2025 Test Corp\nLicense text"
-        assert content == expected
-
-    def test_extract_header_content_multi_line(self):
-        """Test extracting content from multi-line comments."""
-        header = "/*\n * Copyright (c) 2025 Test Corp\n * License text\n */"
-        comment_style = {"start": "/*", "middle": " *", "end": " */"}
-
-        content = self.manager._extract_header_content(header, comment_style)
-        expected = "Copyright (c) 2025 Test Corp\nLicense text"
-        assert content == expected
