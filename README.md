@@ -18,9 +18,10 @@ Add to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: local
+  - repo: https://github.com/KelvinChung2000/license-header-pre-commit
     hooks:
       - id: license-header
+        ref:
         name: License Header
         entry: python license_header_hook.py
         language: python
