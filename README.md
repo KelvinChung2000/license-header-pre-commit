@@ -19,7 +19,7 @@ Add to your `.pre-commit-config.yaml`:
 ```yaml
 repos:
 - repo: https://github.com/KelvinChung2000/license-header-pre-commit
-  rev: 1.0.0
+  rev: <latest-release-version>
   hooks:
     - id: license-header
       name: License Header
