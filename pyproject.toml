@@ -37,10 +37,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/license-header-hook"
-Repository = "https://github.com/yourusername/license-header-hook"
-Issues = "https://github.com/yourusername/license-header-hook/issues"
-Changelog = "https://github.com/yourusername/license-header-hook/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/KelvinChung2000/license-header-hook"
+Repository = "https://github.com/KelvinChung2000/license-header-hook"
+Issues = "https://github.com/KelvinChung2000/license-header-hook/issues"
+Changelog = "https://github.com/KelvinChung2000/license-header-hook/blob/main/CHANGELOG.md"
 
 [project.scripts]
 license-header-hook = "license_header_hook:main"
