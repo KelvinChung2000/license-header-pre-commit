@@ -163,11 +163,10 @@ class TestMain:
     def test_main_no_files_to_process(self):
         """Test main function when no files need processing."""
         # Create file that already has correct header
-        template_content = f"Copyright (c) {2025} Test Corp"
-        header = f"# {template_content}"
+        header = "# Copyright (c) 2025 Test Corp"
 
         with open(self.test_file, "w") as f:
-            f.write(f"{header}\n\nprint('hello world')\n")
+            f.write(f"{header}\nprint('hello world')\n")
 
         test_args = [
             "license_header_hook.py",
@@ -416,7 +415,7 @@ print('hello')
         correct_header = self.manager.create_header_comment(formatted, comment_style)
 
         with open(test_file, "w") as f:
-            f.write(f"{correct_header}\n\nprint('hello')\n")
+            f.write(f"{correct_header}\nprint('hello')\n")
 
         # Store original modification time
         original_stat = os.stat(test_file)
