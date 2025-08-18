@@ -18,18 +18,17 @@ Add to your `.pre-commit-config.yaml`:
 
 ```yaml
 repos:
-  - repo: https://github.com/KelvinChung2000/license-header-pre-commit
-    hooks:
-      - id: license-header
-        ref:
-        name: License Header
-        entry: python license_header_hook.py
-        language: python
-        files: \.(py|js|ts|java|c|cpp|h|hpp|go|rs)$
-        args: [
-          "--template", "license-header.txt",
-          "--copyright-holder", "Your Company LLC"
-        ]
+- repo: https://github.com/KelvinChung2000/license-header-pre-commit
+  rev: 1.0.0
+  hooks:
+    - id: license-header
+      name: License Header
+      language: python
+      files: \.(py|v|sv|vhd|vhdl)$
+      args: [
+        "--template", "license-header",
+        "--copyright-holder", "Novel Computing Technologies Group @ University Heidelberg"
+      ]
 ```
 
 ### Standalone usage
