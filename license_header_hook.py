@@ -303,11 +303,18 @@ class LicenseHeaderManager:
             remaining_content = content_without_header
             if remaining_content.startswith(shebang):
                 remaining_content = remaining_content[len(shebang) :].lstrip("\n")
-            new_content = (
-                shebang + "\n" + new_header + "\n\n" + remaining_content.lstrip("\n")
-            )
+
+            remaining_content = remaining_content.lstrip("\n")
+            if remaining_content:
+                new_content = shebang + "\n" + new_header + "\n\n" + remaining_content
+            else:
+                new_content = shebang + "\n" + new_header + "\n"
         else:
-            new_content = new_header + "\n\n" + content_without_header.lstrip("\n")
+            remaining_content = content_without_header.lstrip("\n")
+            if remaining_content:
+                new_content = new_header + "\n\n" + remaining_content
+            else:
+                new_content = new_header + "\n"
 
         # Write back if changed
         if new_content != original_content:

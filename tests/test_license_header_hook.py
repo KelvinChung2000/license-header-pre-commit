@@ -588,3 +588,55 @@ print('hello')
 
         # Code should be preserved
         assert "print('hello')" in result
+
+    def test_process_file_empty_file_single_newline(self):
+        """Test that empty files get header with only single trailing newline."""
+        test_file = os.path.join(self.temp_dir, "empty.py")
+
+        # Create empty file
+        with open(test_file, "w") as f:
+            f.write("")
+
+        result = self.manager.process_file(test_file)
+        assert result is True
+
+        # Check that file has header with single newline
+        with open(test_file, "rb") as f:
+            content = f.read()
+
+        # Should end with single newline, not double
+        assert content.endswith(b"\n")
+        assert not content.endswith(b"\n\n")
+
+        # Verify content structure
+        content_str = content.decode("utf-8")
+        lines = content_str.split("\n")
+
+        # Should have exactly 2 lines of header plus one empty line from trailing newline
+        assert len(lines) == 3  # header line 1, header line 2, empty from trailing \n
+        assert "Test Corp" in content_str
+
+    def test_process_file_shebang_only_file_single_newline(self):
+        """Test that shebang-only files get header with single trailing newline."""
+        test_file = os.path.join(self.temp_dir, "shebang_only.py")
+
+        # Create file with only shebang
+        with open(test_file, "w") as f:
+            f.write("#!/usr/bin/env python3")
+
+        result = self.manager.process_file(test_file)
+        assert result is True
+
+        # Check content structure
+        with open(test_file) as f:
+            content = f.read()
+
+        lines = content.split("\n")
+
+        # Should be: shebang, header1, header2, empty from trailing newline
+        assert lines[0] == "#!/usr/bin/env python3"
+        assert "Test Corp" in content
+
+        # Should end with single newline
+        assert content.endswith("\n")
+        assert not content.endswith("\n\n")
