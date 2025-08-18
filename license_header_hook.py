@@ -50,8 +50,8 @@ class CommentRegistry:
         # RTL
         ".vhdl": {"start": "/*", "middle": "", "end": "*/"},
         ".vhd": {"start": "/*", "middle": "", "end": "*/"},
-        ".v": {"start": "/*", "middle": "", "end": "*/"},
-        ".sv": {"start": "/*", "middle": "", "end": "*/"},
+        ".v": {"start": "//", "middle": "//", "end": "//"},
+        ".sv": {"start": "//", "middle": "//", "end": "//"},
     }
 
     def __init__(self, custom_mappings: dict | None = None):
@@ -210,7 +210,13 @@ class LicenseHeaderManager:
         self, file_content: str, comment_style: dict[str, str]
     ) -> str:
         """Remove existing license header from file content."""
+        # First, check if there's actually a header to remove
+        existing_header = self.extract_existing_header(file_content, comment_style)
+        if not existing_header:
+            return file_content
+
         lines = file_content.split("\n")
+        header_lines = existing_header.split("\n")
 
         # Preserve shebang
         start_idx = 0
@@ -226,19 +232,26 @@ class LicenseHeaderManager:
         if start_idx >= len(lines):
             return file_content
 
-        # Find and skip header
+        # Remove the exact header lines that were detected
         if comment_style["start"] == comment_style["middle"]:
-            # Single-line comments
-            while start_idx < len(lines):
-                line = lines[start_idx].strip()
-                if line.startswith(comment_style["start"]):
-                    start_idx += 1
-                elif not line:  # Empty line after comments
-                    start_idx += 1
+            # Single-line comments - remove exact matching header lines
+            header_end_idx = start_idx
+            for expected_line in header_lines:
+                if (
+                    header_end_idx < len(lines)
+                    and lines[header_end_idx].strip() == expected_line.strip()
+                ):
+                    header_end_idx += 1
                 else:
                     break
+
+            # Skip empty lines after header
+            while header_end_idx < len(lines) and not lines[header_end_idx].strip():
+                header_end_idx += 1
+
+            start_idx = header_end_idx
         else:
-            # Multi-line comments
+            # Multi-line comments - find the end of the specific header block
             first_line = lines[start_idx].strip()
             if first_line.startswith(comment_style["start"]):
                 while start_idx < len(lines):

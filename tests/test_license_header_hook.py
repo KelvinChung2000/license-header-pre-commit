@@ -427,3 +427,164 @@ print('hello')
         # Verify file wasn't modified
         new_stat = os.stat(test_file)
         assert new_stat.st_mtime == original_stat.st_mtime
+
+    def test_process_file_preserves_non_header_comments_single_line(self):
+        """Test that non-header comments are preserved in single-line comment files."""
+        test_file = os.path.join(self.temp_dir, "preserve_comments.py")
+
+        # Create file with header and regular comments
+        with open(test_file, "w") as f:
+            f.write(
+                "# Copyright (c) 2020 Old Corp\n"
+                "# Licensed under Old License\n"
+                "\n"
+                "# This is a regular comment that should be preserved\n"
+                "# Another comment that should stay\n"
+                "\n"
+                "def function1():\n"
+                "    # Inline comment should stay\n"
+                "    return 'test'\n"
+                "\n"
+                "# More comments that should be preserved\n"
+                "class TestClass:\n"
+                "    pass\n"
+            )
+
+        result = self.manager.process_file(test_file)
+        assert result is True
+
+        # Check that header was replaced and other comments preserved
+        with open(test_file) as f:
+            content = f.read()
+
+        # New header should be present
+        assert "Test Corp" in content
+        assert str(self.manager.current_year) in content
+
+        # Old header should be gone
+        assert "Old Corp" not in content
+        assert "Old License" not in content
+
+        # Regular comments should be preserved
+        assert "This is a regular comment that should be preserved" in content
+        assert "Another comment that should stay" in content
+        assert "Inline comment should stay" in content
+        assert "More comments that should be preserved" in content
+
+        # Code should be preserved
+        assert "def function1():" in content
+        assert "class TestClass:" in content
+
+    def test_process_file_preserves_non_header_comments_multiline(self):
+        """Test that non-header comments are preserved in multi-line comment files."""
+        test_file = os.path.join(self.temp_dir, "preserve_comments.js")
+
+        # Create file with header and regular comments
+        with open(test_file, "w") as f:
+            f.write(
+                "/*\n"
+                " * Copyright (c) 2020 Old JS Corp\n"
+                " * Licensed under Old JS License\n"
+                " */\n"
+                "\n"
+                "/*\n"
+                " * This is a regular multiline comment\n"
+                " * that should be preserved\n"
+                " */\n"
+                "\n"
+                "function hello() {\n"
+                "    // Regular inline comment\n"
+                "    console.log('Hello world');\n"
+                "}\n"
+            )
+
+        result = self.manager.process_file(test_file)
+        assert result is True
+
+        # Check that header was replaced and other comments preserved
+        with open(test_file) as f:
+            content = f.read()
+
+        # New header should be present
+        assert "Test Corp" in content
+        assert str(self.manager.current_year) in content
+
+        # Old header should be gone
+        assert "Old JS Corp" not in content
+        assert "Old JS License" not in content
+
+        # Regular comments should be preserved
+        assert "This is a regular multiline comment" in content
+        assert "that should be preserved" in content
+        assert "Regular inline comment" in content
+
+        # Code should be preserved
+        assert "function hello()" in content
+
+    def test_process_file_header_followed_by_empty_lines_and_comments(self):
+        """Test header replacement when header is followed by empty lines then comments."""
+        test_file = os.path.join(self.temp_dir, "spaced_comments.py")
+
+        # Create file with header, empty lines, then regular comments
+        with open(test_file, "w") as f:
+            f.write(
+                "# Copyright (c) 2020 Spaced Corp\n"
+                "# Licensed under Spaced License\n"
+                "\n"
+                "\n"
+                "# Module-level docstring comment\n"
+                "# This explains what the module does\n"
+                "\n"
+                "import os\n"
+                "\n"
+                "def main():\n"
+                "    pass\n"
+            )
+
+        result = self.manager.process_file(test_file)
+        assert result is True
+
+        # Check results
+        with open(test_file) as f:
+            content = f.read()
+
+        # New header should be present
+        assert "Test Corp" in content
+
+        # Old header should be gone
+        assert "Spaced Corp" not in content
+        assert "Spaced License" not in content
+
+        # Module comments should be preserved
+        assert "Module-level docstring comment" in content
+        assert "This explains what the module does" in content
+
+        # Code should be preserved
+        assert "import os" in content
+        assert "def main():" in content
+
+    def test_remove_existing_header_only_removes_detected_header(self):
+        """Test that remove_existing_header only removes the actual header."""
+        content = (
+            "# Copyright (c) 2020 Test Header Corp\n"
+            "# Licensed under Test License\n"
+            "\n"
+            "# This should not be removed\n"
+            "# Neither should this\n"
+            "\n"
+            "print('hello')\n"
+        )
+
+        comment_style = {"start": "#", "middle": "#", "end": "#"}
+        result = self.manager.remove_existing_header(content, comment_style)
+
+        # Header should be removed
+        assert "Test Header Corp" not in result
+        assert "Test License" not in result
+
+        # Non-header comments should be preserved
+        assert "This should not be removed" in result
+        assert "Neither should this" in result
+
+        # Code should be preserved
+        assert "print('hello')" in result
